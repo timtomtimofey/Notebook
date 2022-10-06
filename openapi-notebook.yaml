@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Notebook
+  version: 0.1.5
+  description: REST API for simple notebook with support of pagination
+
+components:
+  schemas:
+    note:
+      type: object
+      properties:
+        id:
+          description: expected to be unique
+          type: string
+          example: 'That guy'
+        name:
+          type: string
+          example: 'Jhon Doe'
+        company:
+          type: string
+          example: 'Department of tunnels and bridges'
+          nullable: true
+        phone:
+          type: string
+          pattern: '^[+]?[0-9]{1,15}$'
+          example: '88005553535'
+        mail:
+          type: string
+          example: 'mail@example.com'
+        birthdate:
+          description: date of birth in format day.month.year
+          type: string
+          pattern: '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}$'
+          example: '01.02.1931'
+          nullable: true
+        # photo:
+        #   type: ???
+        #   nullable: true
+    noteUpdate:
+      description: Any combination of fields from note schema
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'That guy'
+          nullable: true
+        name:
+          type: string
+          example: 'Jhon Doe'
+          nullable: true
+        company:
+          type: string
+          example: 'Department of tunnels and bridges'
+          nullable: true
+        phone:
+          type: string
+          pattern: '^[+]?[0-9]{1,15}$'
+          example: '88005553535'
+          nullable: true
+        mail:
+          type: string
+          example: 'mail@example.com'
+          nullable: true
+        birthdate:
+          description: date of birth in format day.month.year
+          type: string
+          pattern: '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}$'
+          example: '01.02.1931'
+          nullable: true
+        # photo:
+        #   type: ???
+        #   nullable: true
+
+paths:
+  /api/v1/notebook/:
+    'get':
+      description: |
+        Get all existing notes with support of optional SQL-like limit and offset
+        query parameters
+      parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/note'
+
+    'post':
+      description: |
+        Create new note. If ID is empty string then assign some uniquely generated ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/note'
+      responses:
+        '201':
+          description: Note successfully created and returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/note'
+  /api/v1/notebook/{id}/:
+    'get':
+      description: Get note by its ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/note'
+    'post':
+      description: |
+        Update already existing note with specified fields (ID field can alse be updated)
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/noteUpdate'
+      responses:
+        '200':
+          description: Note successfully updated and returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/note'
+    'delete':
+      description: Delete note with supplied ID
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Note have been successfully deleted
