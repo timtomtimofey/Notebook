@@ -10,7 +10,7 @@ type Note struct {
 	Phone     string  `json:"phone"`
 	Mail      string  `json:"mail"`
 	BirthDate *string `json:"birthdate,omitempty"`
-	// TODO: Photo
+	ImageID   *string `json:"image_id,omitempty"`
 }
 
 func (n *Note) VerifyNote() bool {

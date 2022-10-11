@@ -5,5 +5,6 @@ CREATE TABLE notes (
     company varchar,
     phone varchar NOT NULL CHECK (phone SIMILAR TO '[+]?[0-9]{1,15}'),
     mail varchar NOT NULL,
-    birth_date varchar CHECK (birth_date SIMILAR TO '[0-9]{1,2}.[0-9]{1,2}.[0-9]{4}') -- symbol . is not a metachar for SIMILAR TO syntax
+    birth_date varchar CHECK (birth_date SIMILAR TO '[0-9]{1,2}.[0-9]{1,2}.[0-9]{4}'), -- symbol . is not a metachar for SIMILAR TO syntax
+    image_id uuid
 );

@@ -17,7 +17,7 @@ type Handler struct {
 	ns storage.NoteStorage
 }
 
-func New(ns storage.NoteStorage) *Handler {
+func NewHandler(ns storage.NoteStorage) *Handler {
 	return &Handler{ns: ns}
 }
 

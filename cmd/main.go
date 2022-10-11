@@ -23,14 +23,31 @@ func main() {
 		panic(err)
 	}
 	defer ns.Close()
-	h := handlers.New(ns)
+	h := handlers.NewHandler(ns)
 
-	mux := mux.NewRouter().PathPrefix("/api/v1/notebook").Subrouter()
-	mux.HandleFunc("/", h.ListRange).Methods("GET")
-	mux.HandleFunc("/", h.Add).Methods("POST")
-	mux.HandleFunc("/{id}/", h.List).Methods("GET")
-	mux.HandleFunc("/{id}/", h.Update).Methods("POST")
-	mux.HandleFunc("/{id}/", h.Delete).Methods("DELETE")
+	ih, err := handlers.NewImageHandler("./static")
+	if err != nil {
+		panic(err)
+	}
 
-	http.ListenAndServe(":8080", mux)
+	r := mux.NewRouter()
+
+	n := r.PathPrefix("/api/v1/notebook").Subrouter() // n for notes
+	n.HandleFunc("/", h.ListRange).Methods("GET")
+	n.HandleFunc("/", h.Add).Methods("POST")
+	n.HandleFunc("/{id}/", h.List).Methods("GET")
+	n.HandleFunc("/{id}/", h.Update).Methods("POST")
+	n.HandleFunc("/{id}/", h.Delete).Methods("DELETE")
+
+	prefix := "/api/v1/images/"
+	stripper := func(next http.Handler) http.Handler {
+		return http.StripPrefix(prefix, next)
+	}
+	i := r.PathPrefix(prefix).Subrouter() // i for images
+	i.Use(mux.MiddlewareFunc(stripper))
+	i.HandleFunc("/", ih.Add).Methods("POST")
+	i.HandleFunc("/{id}/", ih.Get).Methods("GET")
+	i.HandleFunc("/{id}/", ih.Delete).Methods("DELETE")
+
+	http.ListenAndServe(":8080", r)
 }

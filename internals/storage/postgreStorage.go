@@ -52,7 +52,7 @@ func (ps *PostgreStorage) IsNote(ctx context.Context, id string) (bool, error) {
 
 func rowToNote(row pgx.CollectableRow) (Note, error) {
 	var res Note
-	err := row.Scan(&res.ID, &res.Name, &res.Company, &res.Phone, &res.Mail, &res.BirthDate)
+	err := row.Scan(&res.ID, &res.Name, &res.Company, &res.Phone, &res.Mail, &res.BirthDate, &res.ImageID)
 	return res, err
 }
 
@@ -82,8 +82,8 @@ func (ps *PostgreStorage) GetRangeNotes(ctx context.Context, offset, limit int) 
 }
 
 func (ps *PostgreStorage) AddNote(ctx context.Context, n *Note) (Note, error) {
-	sql := "INSERT INTO notes (id, full_name, company, phone, mail, birth_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;"
-	rows, err := ps.conn.Query(ctx, sql, n.ID, n.Name, n.Company, n.Phone, n.Mail, n.BirthDate)
+	sql := "INSERT INTO notes (id, full_name, company, phone, mail, birth_date, image_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;"
+	rows, err := ps.conn.Query(ctx, sql, n.ID, n.Name, n.Company, n.Phone, n.Mail, n.BirthDate, n.ImageID)
 	if err != nil {
 		return Note{}, err
 	}
@@ -111,6 +111,9 @@ func (ps *PostgreStorage) UpdateNote(ctx context.Context, id string, n *Note) (N
 	}
 	if n.BirthDate != nil {
 		updates = append(updates, fmt.Sprintf("birth_date = '%s'", *n.BirthDate))
+	}
+	if n.ImageID != nil {
+		updates = append(updates, fmt.Sprintf(" image_id = '%s'", *n.ImageID))
 	}
 	if len(updates) == 0 {
 		return ps.GetNote(ctx, id)
