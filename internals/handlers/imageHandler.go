@@ -1,8 +1,9 @@
 package handlers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ func (i *ImageHandler) Get(w http.ResponseWriter, r *http.Request) {
 	if last >= 0 && r.URL.Path[last] == '/' {
 		r.URL.Path = r.URL.Path[:last]
 	}
-	log.Print(r.URL)
+	// log.Print(r.URL)
 	i.fileServer.ServeHTTP(w, r)
 }
 
@@ -53,12 +54,22 @@ func (i *ImageHandler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	if _, err := io.Copy(file, data); err != nil {
+	hash := md5.New()
+	multiWriter := io.MultiWriter(file, hash)
+	if _, err := io.Copy(multiWriter, data); err != nil {
 		http.Error(w, "Cant write image: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sum := hash.Sum([]byte{})
+	sumStr := hex.EncodeToString(sum)
+	hashPath := filepath.Join(i.path, sumStr)
+	if err := os.Rename(path, hashPath); err != nil {
+		http.Error(w, "Cant rename file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	w.Write([]byte("{ \"image_id\": \"" + id + "\" }"))
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("{ \"image_id\": \"" + sumStr + "\" }"))
 }
 
 func (i *ImageHandler) Delete(w http.ResponseWriter, r *http.Request) {

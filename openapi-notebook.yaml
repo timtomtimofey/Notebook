@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Notebook
-  version: 0.1.5
+  version: 0.2.1
   description: REST API for simple notebook with support of pagination
 
 components:
@@ -33,9 +33,8 @@ components:
           pattern: '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}$'
           example: '01.02.1931'
           nullable: true
-        # photo:
-        #   type: ???
-        #   nullable: true
+        image_id:
+          $ref: '#/components/schemas/image_id'
     noteUpdate:
       description: Any combination of fields from note schema
       type: object
@@ -67,16 +66,29 @@ components:
           pattern: '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{4}$'
           example: '01.02.1931'
           nullable: true
-        # photo:
-        #   type: ???
-        #   nullable: true
+        image_id:
+          $ref: '#/components/schemas/image_id'
+          nullable: true # fix it
+    image_id:
+      description: md5 hash of the image used as ID
+      type: string
+      pattern: '^[0-9a-f]{32}$'
+      example: '0f2be6a1cdd6577258612da33fa089a9'
 
+tags:
+- name: notes
+  description: |
+    manages textual information: name, company, phone, etc
+- name: images
+  description: manages upload, downolad and deletion of images
 paths:
   /api/v1/notebook/:
     'get':
       description: |
         Get all existing notes with support of optional SQL-like limit and offset
         query parameters
+      tags:
+      - notes
       parameters:
       - name: limit
         in: query
@@ -101,6 +113,8 @@ paths:
     'post':
       description: |
         Create new note. If ID is empty string then assign some uniquely generated ID
+      tags:
+      - notes
       requestBody:
         content:
           application/json:
@@ -116,6 +130,8 @@ paths:
   /api/v1/notebook/{id}/:
     'get':
       description: Get note by its ID
+      tags:
+      - notes
       parameters:
       - name: id
         in: path
@@ -132,6 +148,8 @@ paths:
     'post':
       description: |
         Update already existing note with specified fields (ID field can alse be updated)
+      tags:
+      - notes
       parameters:
       - name: id
         in: path
@@ -152,6 +170,8 @@ paths:
                 $ref: '#/components/schemas/note'
     'delete':
       description: Delete note with supplied ID
+      tags:
+      - notes
       parameters:
       - name: id
         in: path
@@ -161,3 +181,59 @@ paths:
       responses:
         '204':
           description: Note have been successfully deleted
+  /api/v1/images/:
+    'post':
+      description: Upload image and return its ID
+      tags:
+      - images
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Image successfully uploaded and its ID is returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image_id:
+                    $ref : '#/components/schemas/image_id'
+  /api/v1/images/{id}/:
+    'get':
+      description: Get image by its ID
+      tags:
+      - images
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/image_id'
+      responses:
+        '200':
+          description: OK
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+    'delete':
+      description: Delete image by its ID
+      tags:
+      - images
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/image_id'
+      responses:
+        '204':
+          description: Image have been successfully deleted
