@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: .
+    ports:
+    - 8080:8080
+    networks:
+    - net
+    volumes:
+    - images:/backend/internals/storage
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /app/PGDATA
+    networks:
+    - net
+    volumes:
+    - db:/app/PGDATA
+
+networks:
+  net: {}
+
+volumes:
+  db: {}
+  images: {}
